@@ -6,6 +6,6 @@ import react from '@vitejs/plugin-react';
 // "/<repo-name>/" gesetzt werden, sonst werden CSS/JS nach dem Deploy nicht gefunden.
 // Nur bei einem User/Organisations-Root-Repo ("dein-name.github.io") bleibt es bei "/".
 export default defineConfig({
-  base: '/flip7-zaehler/',
+  base: '/flip7/',
   plugins: [react()],
 });
