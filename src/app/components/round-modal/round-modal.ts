@@ -1,7 +1,7 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { BonusChoice, Player, RoundDraft, RoundEntry, Ruleset } from '../../types';
-import { MODIFIER_OPTIONS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../logic';
+import type { BonusChoice, Player, RoundDraft, RoundEntry, Ruleset } from '../../../types';
+import { MODIFIER_OPTIONS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../../logic';
 import { CloseIcon } from '../../icons';
 
 function isFilled(entry: RoundEntry): boolean {

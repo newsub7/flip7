@@ -1,7 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { Ruleset } from '../../types';
-import { RULESET_HINTS, RULESET_LABELS } from '../../logic';
+import type { Ruleset } from '../../../types';
+import { RULESET_HINTS, RULESET_LABELS } from '../../../logic';
 import { CloseIcon } from '../../icons';
 
 const RULESETS: Ruleset[] = ['classic', 'vengeance', 'combined'];
@@ -22,18 +22,23 @@ export class SettingsModal {
   readonly labels = RULESET_LABELS;
   readonly hints = RULESET_HINTS;
 
-  target = this.targetScore();
-  rs: Ruleset = this.ruleset();
-  brutal = this.brutalMode();
+  readonly target = linkedSignal(() => this.targetScore());
+  readonly rs = linkedSignal(() => this.ruleset());
+  readonly brutal = linkedSignal(() => this.brutalMode());
 
   handleRulesetClick(next: Ruleset): void {
-    this.rs = next;
-    if (next === 'classic') this.brutal = false;
+    this.rs.set(next);
+    if (next === 'classic') this.brutal.set(false);
   }
 
   handleSave(): void {
-    const val = Number.isFinite(this.target) && this.target > 0 ? this.target : this.targetScore();
-    this.save.emit({ targetScore: val, ruleset: this.rs, brutalMode: this.rs === 'classic' ? false : this.brutal });
+    const t = this.target();
+    const val = Number.isFinite(t) && t > 0 ? t : this.targetScore();
+    this.save.emit({
+      targetScore: val,
+      ruleset: this.rs(),
+      brutalMode: this.rs() === 'classic' ? false : this.brutal(),
+    });
   }
 
   onOverlayClick(e: MouseEvent): void {

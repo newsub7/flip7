@@ -1,5 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
-import type { Player, Round } from '../../types';
+import type { Player, Round } from '../../../types';
 import { CloseIcon } from '../../icons';
 
 interface HistoryRow {

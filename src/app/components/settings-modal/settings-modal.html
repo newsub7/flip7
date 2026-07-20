@@ -8,31 +8,31 @@
     </div>
 
     <span class="field-label">Zielpunktzahl</span>
-    <input type="number" min="50" step="10" [(ngModel)]="target" />
+    <input type="number" min="50" step="10" [ngModel]="target()" (ngModelChange)="target.set($event)" />
 
     <div style="margin-top: 18px">
       <span class="field-label">Regelwerk</span>
       <div class="segmented">
         @for (r of rulesets; track r) {
-          <button class="segment" [class.active]="rs === r" (click)="handleRulesetClick(r)">
+          <button class="segment" [class.active]="rs() === r" (click)="handleRulesetClick(r)">
             {{ labels[r] }}
           </button>
         }
       </div>
-      <p class="hint-text">{{ hints[rs] }}</p>
+      <p class="hint-text">{{ hints[rs()] }}</p>
     </div>
 
     <div
       class="toggle-row"
       style="margin-top: 14px"
-      [style.opacity]="rs === 'classic' ? 0.4 : 1"
-      [style.pointer-events]="rs === 'classic' ? 'none' : 'auto'"
+      [style.opacity]="rs() === 'classic' ? 0.4 : 1"
+      [style.pointer-events]="rs() === 'classic' ? 'none' : 'auto'"
     >
       <div>
         <div class="toggle-label">Brutal Mode</div>
         <div class="toggle-sub">Negative Rundenpunkte erlaubt · Flip-7-Bonus kann einem Gegner abgezogen werden</div>
       </div>
-      <div class="switch" [class.on]="brutal" (click)="brutal = !brutal"></div>
+      <div class="switch" [class.on]="brutal()" (click)="brutal.set(!brutal())"></div>
     </div>
 
     <div class="modal-footer">

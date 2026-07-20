@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { Player } from '../../types';
+import type { Player } from '../../../types';
 import { CloseIcon, TrashIcon } from '../../icons';
 
 @Component({

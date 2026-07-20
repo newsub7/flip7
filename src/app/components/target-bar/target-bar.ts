@@ -1,6 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
-import type { Ruleset } from '../../types';
-import { RULESET_LABELS } from '../../logic';
+import type { Ruleset } from '../../../types';
+import { RULESET_LABELS } from '../../../logic';
 
 @Component({
   selector: 'app-target-bar',
