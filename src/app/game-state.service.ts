@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import type { GameState, Player, Round, RoundDraft, Ruleset } from '../types';
 import { createDefaultState, finalizeRound, findWinners, loadState, saveState, totalFor } from '../logic';
 import type { WinnerInfo } from '../logic';
@@ -22,16 +22,15 @@ export class GameStateService {
     return [...s.players].map((p) => ({ ...p, total: totalFor(s, p.id) })).sort((a, b) => b.total - a.total);
   });
 
-  constructor() {
-    effect(() => {
-      saveState(this.state());
-    });
+  private set(updater: (s: GameState) => GameState): void {
+    this.state.update(updater);
+    saveState(this.state());
   }
 
   addPlayer(name: string): void {
     const trimmed = name.trim();
     if (!trimmed) return;
-    this.state.update((s) => ({
+    this.set((s) => ({
       ...s,
       players: [...s.players, { id: `p${s.nextPlayerId}`, name: trimmed }],
       nextPlayerId: s.nextPlayerId + 1,
@@ -39,14 +38,14 @@ export class GameStateService {
   }
 
   renamePlayer(id: string, name: string): void {
-    this.state.update((s) => ({
+    this.set((s) => ({
       ...s,
       players: s.players.map((p) => (p.id === id ? { ...p, name } : p)),
     }));
   }
 
   removePlayer(id: string): void {
-    this.state.update((s) => ({
+    this.set((s) => ({
       ...s,
       players: s.players.filter((p) => p.id !== id),
       rounds: s.rounds.map((r) => {
@@ -58,17 +57,17 @@ export class GameStateService {
   }
 
   startNewGame(): void {
-    this.state.update((s) => ({ ...createDefaultState(), targetScore: s.targetScore }));
+    this.set((s) => ({ ...createDefaultState(), targetScore: s.targetScore }));
   }
 
   /** Speichert die Runde und liefert Gewinner-Infos, falls das Zielscore erreicht wurde. */
   saveRound(draft: RoundDraft): WinnerInfo | null {
     const round: Round = finalizeRound(draft, this.brutalMode());
-    this.state.update((s) => ({ ...s, rounds: [...s.rounds, round] }));
+    this.set((s) => ({ ...s, rounds: [...s.rounds, round] }));
     return findWinners(this.state());
   }
 
   updateSettings(next: { targetScore: number; ruleset: Ruleset; brutalMode: boolean }): void {
-    this.state.update((s) => ({ ...s, ...next }));
+    this.set((s) => ({ ...s, ...next }));
   }
 }
