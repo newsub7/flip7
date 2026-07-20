@@ -1,0 +1,33 @@
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Rundenverlauf</h2>
+      <button class="icon-btn" aria-label="Schließen" (click)="close.emit()">
+        <app-close-icon />
+      </button>
+    </div>
+
+    <div class="history-content">
+      @if (rounds().length === 0) {
+        <div class="history-empty">Noch keine Runden gespielt.</div>
+      }
+
+      @for (round of viewRounds(); track round.timestamp) {
+        <div class="history-round">
+          <div class="history-round-header">
+            <span>Runde {{ round.roundNumber }}</span>
+          </div>
+          @for (row of round.rows; track row.pid) {
+            <div class="history-row">
+              <div>
+                <div>{{ row.name }}</div>
+                <div class="breakdown">{{ row.breakdown }}</div>
+              </div>
+              <div class="val" [class.bust]="row.bust">{{ row.total }}</div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

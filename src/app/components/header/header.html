@@ -1,0 +1,20 @@
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">7</span>
+    <div class="brand-text">
+      <h1>Flip 7</h1>
+      <p>Punktezähler</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" title="Rundenverlauf" aria-label="Rundenverlauf anzeigen" (click)="history.emit()">
+      <app-history-icon />
+    </button>
+    <button class="icon-btn" title="Spieler verwalten" aria-label="Spieler verwalten" (click)="players.emit()">
+      <app-people-icon />
+    </button>
+    <button class="icon-btn" title="Einstellungen" aria-label="Einstellungen" (click)="settings.emit()">
+      <app-gear-icon />
+    </button>
+  </div>
+</header>

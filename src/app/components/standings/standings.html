@@ -1,0 +1,15 @@
+<section class="standings" aria-label="Punktestand">
+  @for (p of players(); track p.id; let i = $index) {
+    <div class="player-card" [class.leader]="i === 0 && p.total > 0" [style.--rank-color]="color(i)">
+      <div class="rank-badge">{{ i + 1 }}</div>
+      <div class="name-block">
+        <div class="name">{{ p.name }}</div>
+        <div class="sub">{{ roundsPlayed() }} {{ roundsPlayed() === 1 ? 'Runde' : 'Runden' }} gespielt</div>
+      </div>
+      <div class="score" [class.flipping]="flipping()[p.id]">{{ p.total }}</div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="pct(p.total)"></div>
+      </div>
+    </div>
+  }
+</section>

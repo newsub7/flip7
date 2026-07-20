@@ -1,0 +1,76 @@
+<div class="table-felt"></div>
+
+<app-header
+  (history)="openModal.set('history')"
+  (players)="openModal.set('players')"
+  (settings)="openModal.set('settings')"
+/>
+
+<main id="app">
+  <app-target-bar
+    [targetScore]="game.targetScore()"
+    [ruleset]="game.ruleset()"
+    [brutalMode]="game.brutalMode()"
+    (openSettings)="openModal.set('settings')"
+  />
+
+  @if (game.players().length === 0) {
+    <app-empty-state (addPlayer)="openModal.set('players')" />
+  } @else {
+    <app-standings
+      [players]="game.standings()"
+      [roundsPlayed]="game.rounds().length"
+      [targetScore]="game.targetScore()"
+    />
+    <button class="fab" aria-label="Neue Runde eintragen" (click)="openRoundModal()">
+      <app-plus-icon />
+    </button>
+  }
+</main>
+
+@if (openModal() === 'round' && draft(); as d) {
+  <app-round-modal
+    [players]="game.players()"
+    [draft]="d"
+    [ruleset]="game.ruleset()"
+    [brutalMode]="game.brutalMode()"
+    [roundNumber]="game.rounds().length + 1"
+    (draftChange)="draft.set($event)"
+    (cancel)="closeRoundModal()"
+    (save)="saveRound()"
+  />
+}
+
+@if (openModal() === 'players') {
+  <app-players-modal
+    [players]="game.players()"
+    [hasRounds]="game.rounds().length > 0"
+    (add)="addPlayer($event)"
+    (rename)="renamePlayer($event)"
+    (remove)="removePlayer($event)"
+    (newGame)="startNewGame()"
+    (close)="openModal.set(null)"
+  />
+}
+
+@if (openModal() === 'history') {
+  <app-history-modal [players]="game.players()" [rounds]="game.rounds()" (close)="openModal.set(null)" />
+}
+
+@if (openModal() === 'settings') {
+  <app-settings-modal
+    [targetScore]="game.targetScore()"
+    [ruleset]="game.ruleset()"
+    [brutalMode]="game.brutalMode()"
+    (save)="updateSettings($event)"
+    (close)="openModal.set(null)"
+  />
+}
+
+@if (winner(); as w) {
+  <app-winner-overlay [names]="winnerNames(w)" [score]="w.score" (close)="winner.set(null)" />
+}
+
+@if (toast(); as t) {
+  <app-toast [message]="t" />
+}

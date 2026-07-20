@@ -1,0 +1,46 @@
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Spieler verwalten</h2>
+      <button class="icon-btn" aria-label="Schließen" (click)="close.emit()">
+        <app-close-icon />
+      </button>
+    </div>
+
+    <ul class="player-list">
+      @if (players().length === 0) {
+        <li style="color: var(--text-muted); justify-content: center">Noch keine Spieler</li>
+      }
+      @for (p of players(); track p.id) {
+        <li>
+          <input
+            type="text"
+            [value]="p.name"
+            maxlength="20"
+            #nameInput
+            (blur)="handleRename(p.id, p.name, nameInput)"
+            (keydown.enter)="nameInput.blur()"
+          />
+          <button class="remove-btn icon-btn" aria-label="Spieler entfernen" (click)="handleRemove(p.id, p.name)">
+            <app-trash-icon />
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="add-player-row">
+      <input
+        type="text"
+        placeholder="Name des Spielers"
+        maxlength="20"
+        [(ngModel)]="newName"
+        (keydown.enter)="handleAdd()"
+      />
+      <button class="primary-btn small" (click)="handleAdd()">Hinzufügen</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="danger-ghost-btn" (click)="handleNewGame()">Neues Spiel (alles zurücksetzen)</button>
+    </div>
+  </div>
+</div>
