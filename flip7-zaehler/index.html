@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flip 7 Zähler</title>
+<meta name="theme-color" content="#0E1A17">
+<meta name="description" content="Punkte-Tracker für das Kartenspiel Flip 7">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="table-felt"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">7</span>
+    <div class="brand-text">
+      <h1>Flip 7</h1>
+      <p>Punktezähler</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btn-history" title="Rundenverlauf" aria-label="Rundenverlauf anzeigen">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-players" title="Spieler verwalten" aria-label="Spieler verwalten">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-settings" title="Einstellungen" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L1.86 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.05.3-.08.63-.08.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.4.32.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.48 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.01-1.58zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="app">
+  <section id="target-bar" class="target-bar">
+    <span>Zielpunktzahl</span>
+    <strong id="target-value">200</strong>
+    <span id="ruleset-badge" class="ruleset-badge">Klassisch</span>
+    <button id="btn-edit-target" class="link-btn">Einstellungen</button>
+  </section>
+
+  <section id="standings" class="standings" aria-label="Punktestand">
+    <!-- player cards injected here -->
+  </section>
+
+  <div id="empty-state" class="empty-state" hidden>
+    <div class="empty-card">7</div>
+    <h2>Noch keine Spieler</h2>
+    <p>Füge Mitspieler hinzu, um die erste Runde zu zählen.</p>
+    <button class="primary-btn" id="btn-empty-add">Spieler hinzufügen</button>
+  </div>
+
+  <button id="btn-new-round" class="fab" aria-label="Neue Runde eintragen">
+    <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+  </button>
+</main>
+
+<!-- Round entry modal -->
+<div id="round-modal" class="modal-overlay" hidden>
+  <div class="modal round-modal">
+    <div class="modal-header">
+      <h2>Runde <span id="round-number">1</span> eintragen</h2>
+      <button class="icon-btn" id="close-round-modal" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.88 18.3 9.17 12 2.88 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/></svg>
+      </button>
+    </div>
+
+    <div class="player-tabs" id="player-tabs"></div>
+
+    <div id="player-score-forms"></div>
+
+    <div class="modal-footer">
+      <button class="ghost-btn" id="close-round-modal-2">Abbrechen</button>
+      <button class="primary-btn" id="btn-save-round">Runde speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Player management modal -->
+<div id="players-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Spieler verwalten</h2>
+      <button class="icon-btn" id="close-players-modal" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.88 18.3 9.17 12 2.88 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/></svg>
+      </button>
+    </div>
+    <ul id="player-list" class="player-list"></ul>
+    <div class="add-player-row">
+      <input type="text" id="new-player-name" placeholder="Name des Spielers" maxlength="20">
+      <button class="primary-btn small" id="btn-add-player">Hinzufügen</button>
+    </div>
+    <div class="modal-footer">
+      <button class="danger-ghost-btn" id="btn-new-game">Neues Spiel (alles zurücksetzen)</button>
+    </div>
+  </div>
+</div>
+
+<!-- History modal -->
+<div id="history-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Rundenverlauf</h2>
+      <button class="icon-btn" id="close-history-modal" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.88 18.3 9.17 12 2.88 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/></svg>
+      </button>
+    </div>
+    <div id="history-content" class="history-content"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div id="target-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Einstellungen</h2>
+      <button class="icon-btn" id="close-target-modal" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.88 18.3 9.17 12 2.88 5.71 4.3 4.29l6.29 6.3 6.29-6.3z"/></svg>
+      </button>
+    </div>
+
+    <span class="field-label">Zielpunktzahl</span>
+    <input type="number" id="target-input" value="200" min="50" step="10">
+
+    <div style="margin-top:18px;">
+      <span class="field-label">Regelwerk</span>
+      <div class="segmented" id="ruleset-picker">
+        <button class="segment" data-ruleset="classic">Klassisch</button>
+        <button class="segment" data-ruleset="vengeance">With a Vengeance</button>
+        <button class="segment" data-ruleset="combined">Kombiniert</button>
+      </div>
+      <p class="hint-text" id="ruleset-hint"></p>
+    </div>
+
+    <div class="toggle-row" id="brutal-mode-row" style="margin-top:14px;">
+      <div>
+        <div class="toggle-label">Brutal Mode</div>
+        <div class="toggle-sub">Negative Rundenpunkte erlaubt · Flip-7-Bonus kann einem Gegner abgezogen werden</div>
+      </div>
+      <div class="switch" id="brutal-mode-switch"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="primary-btn" id="btn-save-target">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Winner overlay -->
+<div id="winner-overlay" class="winner-overlay" hidden>
+  <div class="winner-card">
+    <div class="winner-flip">🏆</div>
+    <h2 id="winner-name">Spieler</h2>
+    <p>gewinnt mit <span id="winner-score">0</span> Punkten!</p>
+    <button class="primary-btn" id="btn-winner-close">Weiter</button>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
