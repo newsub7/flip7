@@ -1,20 +1,8 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { BonusChoice, Player, RoundDraft, RoundEntry, Ruleset } from '../../../types';
-import { MODIFIER_OPTIONS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../../logic';
+import type { BonusChoice, Player, RoundEntry, Ruleset } from '../../../types';
+import { CLASSIC_NUMBERS, MODIFIER_OPTIONS, VENGEANCE_NUMBERS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../../logic';
 import { CloseIcon } from '../../icons';
-
-function isFilled(entry: RoundEntry): boolean {
-  return (
-    entry.bust ||
-    entry.sum > 0 ||
-    entry.modifiers.length > 0 ||
-    entry.negModifiers.length > 0 ||
-    entry.bonus ||
-    entry.zero ||
-    entry.divide2
-  );
-}
 
 @Component({
   selector: 'app-round-modal',
@@ -22,60 +10,47 @@ function isFilled(entry: RoundEntry): boolean {
   templateUrl: './round-modal.html',
 })
 export class RoundModal {
-  players = input.required<Player[]>();
-  draft = input.required<RoundDraft>();
+  player = input.required<Player>();
+  otherPlayers = input.required<Player[]>();
+  entry = input.required<RoundEntry>();
   ruleset = input.required<Ruleset>();
   brutalMode = input.required<boolean>();
   roundNumber = input.required<number>();
 
-  draftChange = output<RoundDraft>();
+  save = output<RoundEntry>();
   cancel = output<void>();
-  save = output<void>();
 
-  readonly modifierOptions = MODIFIER_OPTIONS;
-
-  private readonly activeId = signal<string | null>(null);
-  readonly effectiveActiveId = computed(() => this.activeId() ?? this.players()[0]?.id ?? '');
+  readonly modifierOptions = MODIFIER_OPTIONS;  
+  
+  readonly local = linkedSignal(() => this.entry());
 
   readonly showClassic = computed(() => showsClassicModifiers(this.ruleset()));
   readonly showVengeance = computed(() => showsVengeanceModifiers(this.ruleset()));
+  readonly total = computed(() => calcEntryTotal(this.local(), this.brutalMode()));
 
-  setActive(id: string): void {
-    this.activeId.set(id);
+  // Hängt von ruleset() ab -> computed() statt eines normalen Felds, damit es sich
+  // automatisch neu berechnet, wenn der Nutzer das Regelwerk wechselt.
+  readonly numbers = computed<number[]>(() => {
+    switch (this.ruleset()) {
+      case 'classic':
+        return CLASSIC_NUMBERS;
+      case 'vengeance':
+        return VENGEANCE_NUMBERS;
+      case 'combined':
+        return [...new Set([...CLASSIC_NUMBERS, ...VENGEANCE_NUMBERS])].sort((a, b) => a - b);
+    }
+  });
+
+  update(patch: Partial<RoundEntry>): void {
+    this.local.update((e) => ({ ...e, ...patch }));
   }
 
-  tabClass(p: Player): string {
-    const entry = this.draft()[p.id];
-    const cls = ['player-tab'];
-    if (p.id === this.effectiveActiveId()) cls.push('active');
-    if (entry.bust) cls.push('bust');
-    else if (isFilled(entry)) cls.push('done');
-    return cls.join(' ');
-  }
-
-  entryFor(id: string): RoundEntry {
-    return this.draft()[id];
-  }
-
-  total(entry: RoundEntry): number {
-    return calcEntryTotal(entry, this.brutalMode());
-  }
-
-  otherPlayers(id: string): Player[] {
-    return this.players().filter((o) => o.id !== id);
-  }
-
-  updateEntry(id: string, patch: Partial<RoundEntry>): void {
-    const d = this.draft();
-    this.draftChange.emit({ ...d, [id]: { ...d[id], ...patch } });
-  }
-
-  toggleBust(id: string): void {
-    const entry = this.draft()[id];
-    if (entry.bust) {
-      this.updateEntry(id, { bust: false });
+  toggleBust(): void {
+    const e = this.local();
+    if (e.bust) {
+      this.update({ bust: false });
     } else {
-      this.updateEntry(id, {
+      this.update({
         bust: true,
         sum: 0,
         x2: false,
@@ -90,32 +65,54 @@ export class RoundModal {
     }
   }
 
-  toggleModifier(id: string, value: number, kind: 'modifiers' | 'negModifiers'): void {
-    const list = this.draft()[id][kind];
+  toggleNumber(value: number): void {
+    const list = this.local().cards;
     const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
-    this.updateEntry(id, { [kind]: next } as Partial<RoundEntry>);
+    this.update({cards: next} as Partial<RoundEntry>);
+
+    if (this.local().cards.length === 7) {
+      this.update({zero: false});
+      this.update({bonus: true});      
+    } else {
+      this.update({bonus: false});
+      let zero: boolean = this.local().cards.includes(0) && this.showVengeance() ? true : false;
+      this.update({zero: zero});
+    }
+    
   }
 
-  setBonusChoice(id: string, choice: BonusChoice): void {
+  toggleModifier(value: number, kind: 'modifiers' | 'negModifiers'): void {
+    console.log(value);
+    console.log(kind);
+    const list = this.local()[kind];
+    const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+    this.update({ [kind]: next } as Partial<RoundEntry>);
+  }
+
+  setBonusChoice(choice: BonusChoice): void {
     if (choice === 'steal') {
-      const target = this.draft()[id].bonusTarget ?? this.otherPlayers(id)[0]?.id ?? null;
-      this.updateEntry(id, { bonusChoice: 'steal', bonusTarget: target });
+      const target = this.local().bonusTarget ?? this.otherPlayers()[0]?.id ?? null;
+      this.update({ bonusChoice: 'steal', bonusTarget: target });
     } else {
-      this.updateEntry(id, { bonusChoice: 'self' });
+      this.update({ bonusChoice: 'self' });
     }
   }
 
-  decSum(id: string, entry: RoundEntry): void {
-    this.updateEntry(id, { sum: Math.max(0, entry.sum - 1) });
+  decSum(): void {
+    this.update({ sum: Math.max(0, this.local().sum - 1) });
   }
 
-  incSum(id: string, entry: RoundEntry): void {
-    this.updateEntry(id, { sum: entry.sum + 1 });
+  incSum(): void {
+    this.update({ sum: this.local().sum + 1 });
   }
 
-  onSumInput(id: string, value: string): void {
+  onSumInput(value: string): void {
     const val = parseInt(value, 10);
-    this.updateEntry(id, { sum: isNaN(val) ? 0 : Math.max(0, val) });
+    this.update({ sum: isNaN(val) ? 0 : Math.max(0, val) });
+  }
+
+  handleSave(): void {
+    this.save.emit(this.local());
   }
 
   onOverlayClick(e: MouseEvent): void {

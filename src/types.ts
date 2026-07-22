@@ -9,6 +9,7 @@ export interface Player {
 export interface RoundEntry {
   sum: number; // Summe der Zahlenkarten
   x2: boolean; // klassische x2-Karte
+  cards: number[];
   modifiers: number[]; // klassische Modifikatoren +2 bis +10
   negModifiers: number[]; // Vengeance-Modifikatoren -2 bis -10
   zero: boolean; // Vengeance Null-Karte

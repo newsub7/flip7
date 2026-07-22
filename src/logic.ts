@@ -2,6 +2,8 @@ import type { GameState, Player, Round, RoundDraft, RoundEntry, Ruleset } from '
 
 export const STORAGE_KEY = 'flip7-state-v1';
 export const MODIFIER_OPTIONS = [2, 4, 6, 8, 10] as const;
+export const CLASSIC_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12];
+export const VENGEANCE_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12, 13];
 
 export const RULESET_LABELS: Record<Ruleset, string> = {
   classic: 'Klassisch',
@@ -76,6 +78,7 @@ export function createEmptyEntry(): RoundEntry {
   return {
     sum: 0,
     x2: false,
+    cards: [],
     modifiers: [],
     negModifiers: [],
     zero: false,
@@ -97,6 +100,8 @@ export function calcBaseScore(entry: RoundEntry, brutalMode: boolean): number {
   if (entry.bust) return 0;
   if (entry.zero) return 0;
   let base = entry.sum || 0;
+  const numSum = entry.cards.reduce((a, b) => a + b, 0);
+  base = base + numSum;
   if (entry.x2) base *= 2;
   if (entry.divide2) base = Math.floor(base / 2);
   const posSum = entry.modifiers.reduce((a, b) => a + b, 0);

@@ -16,5 +16,17 @@
     <button class="icon-btn" title="Einstellungen" aria-label="Einstellungen" (click)="settings.emit()">
       <app-gear-icon />
     </button>
+    <button
+      class="icon-btn"
+      title="Design wechseln"
+      [attr.aria-label]="themeService.theme() === 'dark' ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'"
+      (click)="themeService.toggle()"
+    >
+      @if (themeService.theme() === 'dark') {
+        <app-moon-icon />
+      } @else {
+        <app-sun-icon />
+      }
+    </button>
   </div>
 </header>

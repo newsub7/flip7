@@ -21,23 +21,22 @@
       [players]="game.standings()"
       [roundsPlayed]="game.rounds().length"
       [targetScore]="game.targetScore()"
+      [submittedIds]="submittedIds()"
+      (enterRound)="openRoundEntry($event)"
     />
-    <button class="fab" aria-label="Neue Runde eintragen" (click)="openRoundModal()">
-      <app-plus-icon />
-    </button>
   }
 </main>
 
-@if (openModal() === 'round' && draft(); as d) {
+@if (activePlayer(); as p) {
   <app-round-modal
-    [players]="game.players()"
-    [draft]="d"
+    [player]="p"
+    [otherPlayers]="activeOtherPlayers()"
+    [entry]="activeEntry()"
     [ruleset]="game.ruleset()"
     [brutalMode]="game.brutalMode()"
     [roundNumber]="game.rounds().length + 1"
-    (draftChange)="draft.set($event)"
-    (cancel)="closeRoundModal()"
-    (save)="saveRound()"
+    (cancel)="closeRoundEntry()"
+    (save)="saveRoundEntry($event)"
   />
 }
 
