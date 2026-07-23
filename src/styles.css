@@ -22,6 +22,23 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+:root[data-theme="light"] {
+  --bg: #F6F3EA;
+  --bg-elevated: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --felt-line: rgba(18, 33, 20, 0.035);
+  --gold: #B8790C;
+  --gold-soft: rgba(184, 121, 12, 0.14);
+  --teal: #0C8C7D;
+  --teal-soft: rgba(12, 140, 125, 0.12);
+  --red: #C7333A;
+  --red-soft: rgba(199, 51, 58, 0.1);
+  --text: #1B241F;
+  --text-muted: #5B6B62;
+  --text-dim: #8A968E;
+  --border: rgba(20, 30, 20, 0.1);
+}
+
 * { box-sizing: border-box; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -40,6 +57,7 @@ html, body {
   font-family: var(--font-body);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .table-felt {
@@ -197,7 +215,7 @@ input {
 }
 
 /* ---------- Standings ---------- */
-main { padding-bottom: 120px; }
+main { padding-bottom: calc(32px + var(--safe-bottom)); }
 
 .standings {
   display: flex;
@@ -262,6 +280,21 @@ main { padding-bottom: 120px; }
 
 .player-card.leader .score { color: var(--gold); }
 .player-card.leader::before { background: var(--gold); }
+
+.round-entry-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gold-soft);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.round-entry-btn:active { transform: scale(0.92); }
+.round-entry-btn.done { background: var(--teal-soft); color: var(--teal); }
 
 .progress-track {
   position: absolute;
@@ -343,23 +376,6 @@ main { padding-bottom: 120px; }
   font-size: 14px;
   width: 100%;
 }
-
-.fab {
-  position: fixed;
-  right: 20px;
-  bottom: calc(24px + var(--safe-bottom));
-  width: 60px; height: 60px;
-  border-radius: 50%;
-  background: var(--gold);
-  color: #16210E;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 26px rgba(242,183,5,0.35);
-  z-index: 15;
-  transition: transform 0.15s ease;
-}
-.fab:active { transform: scale(0.92); }
 
 /* ---------- Modals ---------- */
 .modal-overlay {
@@ -524,7 +540,9 @@ main { padding-bottom: 120px; }
 }
 .stepper-btn:active { background: var(--gold-soft); }
 
-.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px;  }
+.numbers-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.numbers-grid .chip { flex: 0 0 calc(25% - 6px); text-align: center; }
 .chip {
   padding: 9px 14px;
   border-radius: 999px;

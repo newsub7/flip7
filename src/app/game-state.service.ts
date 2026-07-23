@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import type { GameState, Player, Round, RoundDraft, Ruleset } from '../types';
-import { createDefaultState, finalizeRound, findWinners, loadState, saveState, totalFor } from '../logic';
+import { createDefaultState, finalizeRound, findWinners, loadState, saveState, totalFor, startNewGame } from '../logic';
 import type { WinnerInfo } from '../logic';
 
 export interface StandingPlayer extends Player {
@@ -57,7 +57,7 @@ export class GameStateService {
   }
 
   startNewGame(): void {
-    this.set((s) => ({ ...createDefaultState(), targetScore: s.targetScore }));
+    this.set((s) => ({ ...startNewGame(), targetScore: s.targetScore }));
   }
 
   /** Speichert die Runde und liefert Gewinner-Infos, falls das Zielscore erreicht wurde. */

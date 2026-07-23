@@ -7,6 +7,19 @@
         <div class="sub">{{ roundsPlayed() }} {{ roundsPlayed() === 1 ? 'Runde' : 'Runden' }} gespielt</div>
       </div>
       <div class="score" [class.flipping]="flipping()[p.id]">{{ p.total }}</div>
+      <button
+        class="round-entry-btn"
+        [class.done]="submittedIds().has(p.id)"
+        [attr.aria-label]="submittedIds().has(p.id) ? 'Punkte für ' + p.name + ' bearbeiten' : 'Punkte für ' + p.name + ' eintragen'"
+        [title]="submittedIds().has(p.id) ? 'Punkte bearbeiten' : 'Punkte eintragen'"
+        (click)="enterRound.emit(p.id)"
+      >
+        @if (submittedIds().has(p.id)) {
+          <app-check-icon />
+        } @else {
+          <app-plus-icon />
+        }
+      </button>
       <div class="progress-track">
         <div class="progress-fill" [style.width.%]="pct(p.total)"></div>
       </div>

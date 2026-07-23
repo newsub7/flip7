@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { GameStateService } from './game-state.service';
-import type { RoundDraft, Ruleset } from '../types';
+import type { RoundDraft, RoundEntry, Ruleset } from '../types';
 import { createEmptyEntry } from '../logic';
 import type { WinnerInfo } from '../logic';
 import { Header } from './components/header/header';
@@ -13,9 +13,8 @@ import { HistoryModal } from './components/history-modal/history-modal';
 import { SettingsModal } from './components/settings-modal/settings-modal';
 import { WinnerOverlay } from './components/winner-overlay/winner-overlay';
 import { Toast } from './components/toast/toast';
-import { PlusIcon } from './icons';
 
-type ModalKind = null | 'round' | 'players' | 'history' | 'settings';
+type ModalKind = null | 'players' | 'history' | 'settings';
 
 @Component({
   selector: 'app-root',
@@ -30,7 +29,6 @@ type ModalKind = null | 'round' | 'players' | 'history' | 'settings';
     SettingsModal,
     WinnerOverlay,
     Toast,
-    PlusIcon,
   ],
   templateUrl: './app.html',
 })
@@ -38,9 +36,25 @@ export class App {
   protected readonly game = inject(GameStateService);
 
   protected readonly openModal = signal<ModalKind>(null);
-  protected readonly draft = signal<RoundDraft | null>(null);
   protected readonly winner = signal<WinnerInfo | null>(null);
   protected readonly toast = signal<string | null>(null);
+
+  // Laufende, noch nicht abgeschlossene Runde: Spieler tragen ihre Punkte nacheinander über
+  // den Button auf ihrer Karte ein; sobald alle aktuellen Spieler eingetragen haben, wird die
+  // Runde automatisch abgeschlossen und gespeichert.
+  protected readonly roundDraft = signal<RoundDraft>({});
+  protected readonly submittedIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly activePlayerId = signal<string | null>(null);
+
+  protected readonly activePlayer = computed(
+    () => this.game.players().find((p) => p.id === this.activePlayerId()) ?? null,
+  );
+  protected readonly activeOtherPlayers = computed(() =>
+    this.game.players().filter((p) => p.id !== this.activePlayerId()),
+  );
+  protected readonly activeEntry = computed<RoundEntry>(
+    () => this.roundDraft()[this.activePlayerId() ?? ''] ?? createEmptyEntry(),
+  );
 
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -68,36 +82,57 @@ export class App {
 
   protected removePlayer(id: string): void {
     this.game.removePlayer(id);
+
+    const draft = { ...this.roundDraft() };
+    delete draft[id];
+    this.roundDraft.set(draft);
+
+    const submitted = new Set(this.submittedIds());
+    submitted.delete(id);
+    this.submittedIds.set(submitted);
+
+    this.maybeFinalizeRound();
   }
 
   protected startNewGame(): void {
     this.game.startNewGame();
+    this.roundDraft.set({});
+    this.submittedIds.set(new Set());
+    this.activePlayerId.set(null);
     this.openModal.set(null);
     this.showToast('Neues Spiel gestartet');
   }
 
-  protected openRoundModal(): void {
-    const players = this.game.players();
-    if (players.length === 0) return;
-    const d: RoundDraft = {};
-    players.forEach((p) => {
-      d[p.id] = createEmptyEntry();
-    });
-    this.draft.set(d);
-    this.openModal.set('round');
+  protected openRoundEntry(playerId: string): void {
+    this.activePlayerId.set(playerId);
   }
 
-  protected closeRoundModal(): void {
-    this.openModal.set(null);
-    this.draft.set(null);
+  protected closeRoundEntry(): void {
+    this.activePlayerId.set(null);
   }
 
-  protected saveRound(): void {
-    const d = this.draft();
-    if (!d) return;
-    const w = this.game.saveRound(d);
-    this.openModal.set(null);
-    this.draft.set(null);
+  protected saveRoundEntry(entry: RoundEntry): void {
+    const id = this.activePlayerId();
+    if (!id) return;
+
+    this.roundDraft.set({ ...this.roundDraft(), [id]: entry });
+    this.submittedIds.set(new Set(this.submittedIds()).add(id));
+    this.activePlayerId.set(null);
+
+    this.maybeFinalizeRound();
+  }
+
+  /** Schließt die laufende Runde automatisch ab, sobald jeder aktuelle Spieler eingetragen hat. */
+  private maybeFinalizeRound(): void {
+    const allIds = this.game.players().map((p) => p.id);
+    if (allIds.length === 0) return;
+
+    const submitted = this.submittedIds();
+    if (!allIds.every((id) => submitted.has(id))) return;
+
+    const w = this.game.saveRound(this.roundDraft());
+    this.roundDraft.set({});
+    this.submittedIds.set(new Set());
     if (w) this.winner.set(w);
   }
 

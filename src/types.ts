@@ -1,6 +1,8 @@
 export type Ruleset = 'classic' | 'vengeance' | 'combined';
 export type BonusChoice = 'self' | 'steal';
 
+export type ModifierKind = 'plus' | 'minus' | 'multiply' | 'divide';
+
 export interface Player {
   id: string;
   name: string;
@@ -9,8 +11,8 @@ export interface Player {
 export interface RoundEntry {
   sum: number; // Summe der Zahlenkarten
   x2: boolean; // klassische x2-Karte
-  modifiers: number[]; // klassische Modifikatoren +2 bis +10
-  negModifiers: number[]; // Vengeance-Modifikatoren -2 bis -10
+  cards: number[];
+  modifiers: Modifier[]; // Modifikatoren
   zero: boolean; // Vengeance Null-Karte
   divide2: boolean; // Vengeance ÷2-Karte
   bonus: boolean; // Flip-7-Bonus erzielt (7 unterschiedliche Zahlenkarten)
@@ -32,6 +34,12 @@ export interface GameState {
   nextPlayerId: number;
   ruleset: Ruleset;
   brutalMode: boolean;
+}
+
+export interface Modifier {
+  label: string;
+  value: number;
+  modifier: ModifierKind;
 }
 
 // Entwurf während der Eingabe einer neuen (noch nicht gespeicherten) Runde

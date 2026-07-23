@@ -1,16 +1,20 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, effect, input, output, signal } from '@angular/core';
 import type { StandingPlayer } from '../../game-state.service';
+import { CheckIcon, PlusIcon } from '../../icons';
 
 const COLORS = ['#F2B705', '#2DD4BF', '#E5484D', '#7C9CF2', '#F28B05', '#A98DF2'];
 
 @Component({
   selector: 'app-standings',
+  imports: [PlusIcon, CheckIcon],
   templateUrl: './standings.html',
 })
 export class Standings {
   players = input.required<StandingPlayer[]>();
   roundsPlayed = input.required<number>();
   targetScore = input.required<number>();
+  submittedIds = input.required<ReadonlySet<string>>();
+  enterRound = output<string>();
 
   readonly flipping = signal<Record<string, boolean>>({});
   private prevTotals: Record<string, number> = {};

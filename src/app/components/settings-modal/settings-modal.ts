@@ -4,7 +4,8 @@ import type { Ruleset } from '../../../types';
 import { RULESET_HINTS, RULESET_LABELS } from '../../../logic';
 import { CloseIcon } from '../../icons';
 
-const RULESETS: Ruleset[] = ['classic', 'vengeance', 'combined'];
+// 'combined' ist aktuell deaktiviert und daher hier nicht wählbar.
+const RULESETS: Ruleset[] = ['classic', 'vengeance'];
 
 @Component({
   selector: 'app-settings-modal',
