@@ -1,8 +1,9 @@
 import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { BonusChoice, Player, RoundEntry, Ruleset } from '../../../types';
-import { CLASSIC_NUMBERS, MODIFIER_OPTIONS, VENGEANCE_NUMBERS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../../logic';
+import { Modifier, type BonusChoice, type Player, type RoundEntry, type Ruleset } from '../../../types';
+import { CLASSIC_MODIFIERS, CLASSIC_NUMBERS, MODIFIER_OPTIONS, VENGEANCE_MODIFIERS, VENGEANCE_NUMBERS, calcEntryTotal, showsClassicModifiers, showsVengeanceModifiers } from '../../../logic';
 import { CloseIcon } from '../../icons';
+import { StandingPlayer } from '../../game-state.service';
 
 @Component({
   selector: 'app-round-modal',
@@ -11,6 +12,7 @@ import { CloseIcon } from '../../icons';
 })
 export class RoundModal {
   player = input.required<Player>();
+  players = input.required<StandingPlayer[]>();
   otherPlayers = input.required<Player[]>();
   entry = input.required<RoundEntry>();
   ruleset = input.required<Ruleset>();
@@ -27,6 +29,7 @@ export class RoundModal {
   readonly showClassic = computed(() => showsClassicModifiers(this.ruleset()));
   readonly showVengeance = computed(() => showsVengeanceModifiers(this.ruleset()));
   readonly total = computed(() => calcEntryTotal(this.local(), this.brutalMode()));
+  readonly actualPoints = computed(() => this.calcActualPoints())
 
   // Hängt von ruleset() ab -> computed() statt eines normalen Felds, damit es sich
   // automatisch neu berechnet, wenn der Nutzer das Regelwerk wechselt.
@@ -37,9 +40,29 @@ export class RoundModal {
       case 'vengeance':
         return VENGEANCE_NUMBERS;
       case 'combined':
-        return [...new Set([...CLASSIC_NUMBERS, ...VENGEANCE_NUMBERS])].sort((a, b) => a - b);
+        // return [...new Set([...CLASSIC_NUMBERS, ...VENGEANCE_NUMBERS])].sort((a, b) => a - b);
+        return [];
     }
   });
+
+  readonly modifiers = computed<Modifier[]>(() => {
+    switch (this.ruleset()) {
+      case 'classic':
+        return CLASSIC_MODIFIERS;
+      case 'vengeance':
+        return VENGEANCE_MODIFIERS;
+      case 'combined':
+        return [];
+    }
+  });
+
+  calcActualPoints(): number {
+    let p = this.players().find(x => x.id == this.player().id);
+    if (!p)
+      return 0;
+        
+    return p.total;
+  }
 
   update(patch: Partial<RoundEntry>): void {
     this.local.update((e) => ({ ...e, ...patch }));
@@ -55,7 +78,6 @@ export class RoundModal {
         sum: 0,
         x2: false,
         modifiers: [],
-        negModifiers: [],
         zero: false,
         divide2: false,
         bonus: false,
@@ -78,15 +100,23 @@ export class RoundModal {
       let zero: boolean = this.local().cards.includes(0) && this.showVengeance() ? true : false;
       this.update({zero: zero});
     }
-    
   }
 
-  toggleModifier(value: number, kind: 'modifiers' | 'negModifiers'): void {
-    console.log(value);
-    console.log(kind);
-    const list = this.local()[kind];
-    const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
-    this.update({ [kind]: next } as Partial<RoundEntry>);
+  toggleModifier(modifier: Modifier): void {
+    if (modifier.modifier == 'multiply') {
+      this.update({ x2: !this.local().x2 });
+      this.update({ divide2: false });
+    }
+      
+    if (modifier.modifier == 'divide') {
+      this.update({ x2: false });
+      this.update({ divide2: !this.local().divide2})
+    }
+    
+    const list = this.local().modifiers;
+    const next = list.some(x => x.label === modifier.label) ? list.filter((v) => v.label !== modifier.label) : [...list, modifier];
+    this.update({ modifiers: next} as Partial<RoundEntry>); 
+
   }
 
   setBonusChoice(choice: BonusChoice): void {
@@ -96,19 +126,6 @@ export class RoundModal {
     } else {
       this.update({ bonusChoice: 'self' });
     }
-  }
-
-  decSum(): void {
-    this.update({ sum: Math.max(0, this.local().sum - 1) });
-  }
-
-  incSum(): void {
-    this.update({ sum: this.local().sum + 1 });
-  }
-
-  onSumInput(value: string): void {
-    const val = parseInt(value, 10);
-    this.update({ sum: isNaN(val) ? 0 : Math.max(0, val) });
   }
 
   handleSave(): void {

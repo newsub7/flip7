@@ -1,4 +1,4 @@
-import type { GameState, Player, Round, RoundDraft, RoundEntry, Ruleset } from './types';
+import type { GameState, Modifier, Player, Round, RoundDraft, RoundEntry, Ruleset } from './types';
 
 export const STORAGE_KEY = 'flip7-state-v1';
 export const MODIFIER_OPTIONS = [2, 4, 6, 8, 10] as const;
@@ -10,6 +10,24 @@ export const RULESET_LABELS: Record<Ruleset, string> = {
   vengeance: 'With a Vengeance',
   combined: 'Kombiniert',
 };
+
+export const CLASSIC_MODIFIERS: Modifier[] = [
+  {label: '+2', value: 2, modifier: 'plus'},
+  {label: '+4', value: 4, modifier: 'plus'},
+  {label: '+6', value: 6, modifier: 'plus'},
+  {label: '+8', value: 8, modifier: 'plus'},
+  {label: '+10', value: 10, modifier: 'plus'},
+  {label: 'x2', value: 2, modifier: 'multiply'}
+];
+
+export const VENGEANCE_MODIFIERS: Modifier[] = [
+  {label: '-2', value: 2, modifier: 'minus'},
+  {label: '-4', value: 4, modifier: 'minus'},
+  {label: '-6', value: 6, modifier: 'minus'},
+  {label: '-8', value: 8, modifier: 'minus'},
+  {label: '-10', value: 10, modifier: 'minus'},
+  {label: '÷2', value: 2, modifier: 'divide'}
+];
 
 export const RULESET_HINTS: Record<Ruleset, string> = {
   classic: 'Original-Regeln: Modifikatoren +2 bis +10 und x2-Karte.',
@@ -57,6 +75,26 @@ export function loadState(): GameState {
   return createDefaultState();
 }
 
+export function startNewGame(): GameState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        players: Array.isArray(parsed.players) ? parsed.players : [],
+        rounds: [],
+        targetScore: typeof parsed.targetScore === 'number' ? parsed.targetScore : 200,
+        nextPlayerId: typeof parsed.nextPlayerId === 'number' ? parsed.nextPlayerId : 1,
+        ruleset: parsed.ruleset === 'vengeance' || parsed.ruleset === 'combined' ? parsed.ruleset : 'classic',
+        brutalMode: typeof parsed.brutalMode === 'boolean' ? parsed.brutalMode : false,
+      };
+    }
+  } catch (e) {
+    console.warn('State konnte nicht geladen werden', e);
+  }
+  return createDefaultState();
+}
+
 export function saveState(state: GameState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -80,7 +118,6 @@ export function createEmptyEntry(): RoundEntry {
     x2: false,
     cards: [],
     modifiers: [],
-    negModifiers: [],
     zero: false,
     divide2: false,
     bonus: false,
@@ -104,8 +141,10 @@ export function calcBaseScore(entry: RoundEntry, brutalMode: boolean): number {
   base = base + numSum;
   if (entry.x2) base *= 2;
   if (entry.divide2) base = Math.floor(base / 2);
-  const posSum = entry.modifiers.reduce((a, b) => a + b, 0);
-  const negSum = entry.negModifiers.reduce((a, b) => a + b, 0);
+  const posModifs: number[] = entry.modifiers.filter(x => x.modifier == 'plus')?.map(x => x.value);//.reduce((a, b) => a + b, 0);
+  const negModifs: number[] = entry.modifiers.filter(x => x.modifier == 'minus')?.map(x => x.value);//.reduce((a, b) => a + b, 0);
+  const posSum = posModifs == null ? 0 : posModifs.reduce((a, b) => a + b, 0);
+  const negSum = negModifs == null ? 0 : negModifs.reduce((a, b) => a + b, 0);
   base = base + posSum - negSum;
   if (base < 0 && !brutalMode) base = 0;
   return base;
@@ -131,7 +170,6 @@ export function finalizeRound(draft: RoundDraft, brutalMode: boolean): Round {
     scores[id] = {
       ...d,
       modifiers: [...d.modifiers],
-      negModifiers: [...d.negModifiers],
       bonusTarget: stealsBonus ? d.bonusTarget : null,
       total: calcEntryTotal(d, brutalMode),
     };

@@ -31,7 +31,8 @@ export class HistoryModal {
     const rounds = this.rounds();
     const byId = Object.fromEntries(players.map((p) => [p.id, p.name]));
 
-    return [...rounds].reverse().map((round, idx) => {
+
+    const result = [...rounds].reverse().map((round, idx) => {
       const roundNumber = rounds.length - idx;
       const stolenFrom: Record<string, number> = {};
       Object.values(round.scores).forEach((s) => {
@@ -46,11 +47,12 @@ export class HistoryModal {
         } else if (s.zero) {
           breakdown = s.bonus ? 'Null-Karte · +15 Flip7' : 'Null-Karte';
         } else {
-          const parts = [`${s.sum} Zahlen`];
-          if (s.x2) parts.push('×2');
-          if (s.divide2) parts.push('÷2');
-          if (s.modifiers.length) parts.push(`+${s.modifiers.reduce((a, b) => a + b, 0)} Mod.`);
-          if (s.negModifiers.length) parts.push(`−${s.negModifiers.reduce((a, b) => a + b, 0)} Mod.`);
+          const parts = [`${s.cards.reduce((a, b) => a + b, 0)} Zahlen`];
+          // if (s.x2) parts.push('×2');
+          // if (s.divide2) parts.push('÷2');
+          if (s.modifiers.length) {
+            parts.push(`${s.modifiers.map(x => x.label).join(', ')}`)
+          }
           if (s.bonus && s.bonusTarget) parts.push('Flip7-Bonus abgegeben');
           else if (s.bonus) parts.push('+15 Flip7');
           breakdown = parts.join(' · ');
@@ -63,6 +65,8 @@ export class HistoryModal {
 
       return { timestamp: round.timestamp, roundNumber, rows };
     });
+
+    return result;
   });
 
   onOverlayClick(e: MouseEvent): void {

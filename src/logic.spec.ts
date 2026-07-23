@@ -35,7 +35,6 @@ describe('createDefaultState / createEmptyEntry', () => {
       sum: 0,
       x2: false,
       modifiers: [],
-      negModifiers: [],
       zero: false,
       divide2: false,
       bonus: false,
@@ -79,18 +78,6 @@ describe('calcBaseScore', () => {
 
   it('applies positive modifiers on top of the sum', () => {
     expect(calcBaseScore(entry({ sum: 10, modifiers: [2, 4] }), false)).toBe(16);
-  });
-
-  it('applies negative modifiers on top of the sum', () => {
-    expect(calcBaseScore(entry({ sum: 10, negModifiers: [2, 4] }), false)).toBe(4);
-  });
-
-  it('floors a negative result at 0 outside brutal mode', () => {
-    expect(calcBaseScore(entry({ sum: 5, negModifiers: [10] }), false)).toBe(0);
-  });
-
-  it('keeps a negative result in brutal mode', () => {
-    expect(calcBaseScore(entry({ sum: 5, negModifiers: [10] }), true)).toBe(-5);
   });
 
   it('is always 0 on a bust, regardless of other fields', () => {

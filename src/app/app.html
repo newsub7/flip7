@@ -30,6 +30,7 @@
 @if (activePlayer(); as p) {
   <app-round-modal
     [player]="p"
+    [players]="game.standings()"
     [otherPlayers]="activeOtherPlayers()"
     [entry]="activeEntry()"
     [ruleset]="game.ruleset()"

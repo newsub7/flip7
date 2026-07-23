@@ -22,109 +22,31 @@
       </div>
     </div>
 
-    }
-
-    @if (!local().bust) {
-    <div class="bust-hideable">
-      <!-- @if (showVengeance()) {
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Null-Karte</div>
-          <div class="toggle-sub">Score wird 0, außer durch Flip-7-Bonus</div>
-        </div>
-        <div class="switch" [class.on]="local().zero" (click)="update({ zero: !local().zero })"></div>
-      </div>
-      } -->
-
-      <!-- @if (local().zero) {
-      <div class="zero-note">
-        Null-Karte aktiv: Zahlenkarten &amp; Modifikatoren zählen nicht, nur der Flip-7-Bonus kann noch Punkte
-        bringen.
-      </div>
-      } @else {
-      @if (showClassic()) {
-      <div style="margin-top: 16px">
-        <span class="field-label">Modifikator-Karten (+)</span>
-        <div class="chip-row">
-          @for (m of modifierOptions; track m) {
-          <button class="chip" [class.selected]="local().modifiers.includes(m)"
-            (click)="toggleModifier(m, 'modifiers')">
-            +{{ m }}
-          </button>
-          }
-        </div>
-      </div>
-      <div class="toggle-row" style="margin-top: 12px">
-        <div>
-          <div class="toggle-label">x2-Karte</div>
-          <div class="toggle-sub">Verdoppelt nur die Zahlenkarten-Summe</div>
-        </div>
-        <div class="switch" [class.on]="local().x2" (click)="update({ x2: !local().x2 })"></div>
-      </div>
-      } -->
-
-      @if (showVengeance()) {
-      <div style="margin-top: 16px">
-        <span class="field-label">Abzug-Karten (−)</span>
-        <div class="chip-row">
-          @for (m of modifierOptions; track m) {
-          <button class="chip negative" [class.selected]="local().negModifiers.includes(m)"
-            (click)="toggleModifier(m, 'negModifiers')">
-            −{{ m }}
-          </button>
-          }
-        </div>
-      </div>
-      <div class="toggle-row" style="margin-top: 12px">
-        <div>
-          <div class="toggle-label">÷2-Karte</div>
-          <div class="toggle-sub">Halbiert die Zahlenkarten-Summe (abgerundet), vor +/− Modifikatoren</div>
-        </div>
-        <div class="switch" [class.on]="local().divide2" (click)="update({ divide2: !local().divide2 })"></div>
-      </div>
-      }
-      <!-- } -->
-
-      <div class="toggle-row" style="margin-top: 16px">
-        <div>
-          <div class="toggle-label">Flip-7-Bonus (+15)</div>
-          <div class="toggle-sub">7 verschiedene Zahlenkarten erreicht</div>
-        </div>
-        <div class="switch" [class.on]="local().bonus" (click)="update({ bonus: !local().bonus })"></div>
-      </div>
-
-      @if (local().bonus && brutalMode() && otherPlayers().length > 0) {
-      <div class="bonus-choice">
-        <div class="bonus-choice-options">
-          <button class="bonus-radio" [class.active]="local().bonusChoice !== 'steal'" (click)="setBonusChoice('self')">
-            Ich behalte die 15 Punkte
-          </button>
-          <button class="bonus-radio" [class.active]="local().bonusChoice === 'steal'"
-            (click)="setBonusChoice('steal')">
-            15 Punkte abziehen bei…
-          </button>
-        </div>
-        @if (local().bonusChoice === 'steal') {
-        <select class="bonus-target-select" [ngModel]="local().bonusTarget ?? otherPlayers()[0].id"
-          (ngModelChange)="update({ bonusTarget: $event })">
-          @for (o of otherPlayers(); track o.id) {
-          <option [value]="o.id">{{ o.name }}</option>
-          }
-        </select>
+    <div style="margin-top: 16px">
+      <span class="field-label">Abzug-Karten (−)</span>
+      <div class="chip-row">
+        @for (m of modifiers(); track m) {
+        <button class="chip" [class.selected]="this.local().modifiers.some(x => x.label === m.label)"
+          (click)="toggleModifier(m)">
+          {{ m.label }}
+        </button>
         }
       </div>
-      }
-
-      <div class="round-total-preview" style="margin-top: 16px">
-        <span class="value">{{ total() }}</span>
-        <span class="label">
-          Punkte diese Runde{{
-          local().bonusChoice === 'steal' && local().bonus && brutalMode() ? ' (Bonus geht an Gegner)' : ''
-          }}
-        </span>
-      </div>
     </div>
-    } <!-- -->
+
+    <div class="round-total-preview" style="margin-top: 16px">
+      <span class="value">{{ total() }}</span>
+      <span class="label">
+        {{ total() }} + {{ actualPoints() }} = {{ total() + actualPoints() }}
+        <!-- Punkte diese Runde
+        {{
+        local().bonusChoice === 'steal' && local().bonus && brutalMode() ? ' (Bonus geht an Gegner)' : ''
+        }} 
+        test {{ actualPoints() }} -->
+      </span>
+    </div>
+    }
+
 
     <div class="modal-footer">
       <button class="ghost-btn" (click)="cancel.emit()">Abbrechen</button>
